@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'package:image/image.dart' as img;
 
+import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
@@ -10,21 +12,25 @@ import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 
 void main() {
-  runApp(ChatApp());
+  runApp(const ChatApp());
 }
 
 class ChatApp extends StatelessWidget {
+  const ChatApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
-      home: ChatScreen(),
+      home: const ChatScreen(),
     );
   }
 }
 
 class ChatScreen extends StatefulWidget {
+  const ChatScreen({super.key});
+
   @override
   _ChatScreenState createState() => _ChatScreenState();
 }
@@ -35,24 +41,30 @@ class _ChatScreenState extends State<ChatScreen> {
   final stt.SpeechToText _speechToText = stt.SpeechToText();
   final TextEditingController _messageController = TextEditingController();
 
-  List<Map<String, dynamic>> _messages = [];
+  final List<Map<String, dynamic>> _messages = [];
   bool _isLoading = false;
   bool _isListening = false;
 
   File? _imageFile;
   String? _base64Image;
 
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _flutterTts.stop();
+    super.dispose();
+  }
+
   // Function to check and request location permission at the start
   Future<void> _checkLocationPermission() async {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // Check if location services are enabled
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      // Location services are not enabled, request user to enable it
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Location services are disabled. Please enable them.'),
           backgroundColor: Colors.red,
         ),
@@ -60,14 +72,13 @@ class _ChatScreenState extends State<ChatScreen> {
       return;
     }
 
-    // Check the location permission status
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        // Handle denial of permission
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Location permission denied.'),
             backgroundColor: Colors.red,
           ),
@@ -76,10 +87,10 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     }
 
-    // If permission is permanently denied, show message
     if (permission == LocationPermission.deniedForever) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
               'Location permission is permanently denied, we cannot access location.'),
           backgroundColor: Colors.red,
@@ -92,11 +103,14 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    _checkLocationPermission(); // Request location permission at the start
+    _checkLocationPermission();
+
+    _flutterTts.setLanguage("ar");
   }
 
   // Function to pick an image
   Future<void> pickImage(String message) async {
+    if (!mounted) return;
     try {
       final XFile? pickedFile =
           await _picker.pickImage(source: ImageSource.gallery);
@@ -109,28 +123,42 @@ class _ChatScreenState extends State<ChatScreen> {
 
         await sendImageToApi(message);
       } else {
-        print("No image selected.");
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No image selected.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
       }
     } catch (e) {
-      print("Error picking image: $e");
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error picking image: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   // Function to send message to chat API
-  Future<void> sendMessageToChatApi(String message) async {
+  Future<void> sendMessageToChatApi(String message, bool isloaction) async {
+    if (message.isEmpty) return;
+
     try {
-      setState(() {
-        _isLoading = true;
-      });
-
-      setState(() {
-        _messages.add({
-          "type": "user",
-          "text": message,
+      if (!isloaction) {
+        setState(() {
+          _isLoading = true;
+          _messages.add({
+            "type": "user",
+            "text": message,
+          });
         });
-      });
+      }
+      log(message);
 
-      final uri = Uri.parse("https://b...content-available-to-author-only...l.app/chat");
+      final uri = Uri.parse("https://basser-api.vercel.app/chat");
 
       final response = await http.post(
         uri,
@@ -140,30 +168,35 @@ class _ChatScreenState extends State<ChatScreen> {
         body: utf8.encode(jsonEncode({"message": message})),
       );
 
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(utf8.decode(response.bodyBytes));
         log('Chat API Response: $responseBody');
 
-        // Add AI's response to the chat
         setState(() {
           _messages.add({
             "type": "ai",
+            "order": responseBody['order'],
             "text": responseBody["message"] ?? "Response received.",
           });
         });
-        if (responseBody['order'] == 'open camera') {
-          _openCamera();
-        } else if (responseBody['order'] == 'getloaction') {
-          getCurrentLocation();
+        await _flutterTts
+            .speak(responseBody["message"] ?? "Response received.");
+        if (responseBody['order'] == 'CAMERA') {
+          await _openCamera();
+        } else if (responseBody['order'] == 'LOCATION') {
+          await getCurrentLocation();
         }
 
-        // Speak the AI response
-        _flutterTts.speak(responseBody["message"] ?? "Response received.");
+        await _flutterTts
+            .speak(responseBody["message"] ?? "Response received.");
       } else {
         throw Exception("Failed to send message: ${response.statusCode}");
       }
     } catch (e) {
       log('Error sending message to chat API: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: $e'),
@@ -171,38 +204,54 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
-  File? _image;
-
   // Function to open the camera
   Future<void> _openCamera() async {
-    // Pick image using the camera
-    final XFile? pickedFile =
-        await _picker.pickImage(source: ImageSource.camera);
+    try {
+      final XFile? pickedFile =
+          await _picker.pickImage(source: ImageSource.camera);
 
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-      });
-    } else {
-      // Handle the case where no image was picked or camera access is denied
-      print("No image picked");
+      if (pickedFile != null) {
+        var image1 = await pickedFile.readAsBytes();
+        setState(() {
+          _imageFile = File(pickedFile.path);
+          _base64Image = base64Encode(image1);
+        });
+
+        await sendImageToApi('ماذا يوجد في الصورة ؟');
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No image captured'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error capturing image: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   // Function to send image to the API
   Future<void> sendImageToApi(String message) async {
     if (_base64Image == null) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please select an image first.'),
-          backgroundColor: Colors.red,
-        ),
+        const SnackBar(content: Text('Please select an image first.')),
       );
       return;
     }
@@ -214,16 +263,23 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages.add({"type": "user", "text": message});
       });
 
-      final uri = Uri.parse("https://b...content-available-to-author-only...l.app/image");
+      // Convert image to JPEG and then to base64
+      final image = img.decodeImage(_imageFile!.readAsBytesSync());
+      if (image == null) throw Exception("Failed to decode image");
+
+      final jpegImage = img.encodeJpg(image);
+      final base64Image = 'data:image/jpeg;base64,${base64Encode(jpegImage)}';
+
+      final uri = Uri.parse("https://basser-api.vercel.app/image");
+      String utf8Message = utf8.encode(message).toString();
 
       final response = await http.post(
         uri,
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-        },
-        body: utf8.encode(
-          jsonEncode({"message": message, "image": _base64Image}),
-        ),
+        headers: {"Content-Type": "application/json; charset=utf-8"},
+        body: jsonEncode({
+          "message": utf8Message,
+          "image": base64Image,
+        }),
       );
 
       if (response.statusCode == 200) {
@@ -237,15 +293,14 @@ class _ChatScreenState extends State<ChatScreen> {
           });
         });
 
-        print(responseBody['order']);
-        // Speak the AI response
-        _flutterTts
+        await _flutterTts
             .speak(responseBody["message"] ?? "Image processed successfully.");
       } else {
         throw Exception("Failed to process image: ${response.statusCode}");
       }
     } catch (e) {
       log('Error sending image to image API: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: $e'),
@@ -253,27 +308,41 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   // Function to start listening for voice input
   Future<void> startListening() async {
-    bool available = await _speechToText.initialize();
+    try {
+      bool available = await _speechToText.initialize();
 
-    if (available) {
-      setState(() {
-        _isListening = true;
-      });
-      _speechToText.listen(onResult: (result) {
+      if (available) {
         setState(() {
-          _messageController.text = result.recognizedWords;
+          _isListening = true;
         });
-      });
-    } else {
-      print("Speech recognition not available.");
+        await _speechToText.listen(
+            localeId: 'ar',
+            onResult: (result) {
+              setState(() {
+                _messageController.text = result.recognizedWords;
+              });
+            });
+      } else {
+        throw Exception("Speech recognition not available.");
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -282,18 +351,13 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() {
       _isListening = false;
     });
-    _speechToText.stop();
+    await _speechToText.stop();
 
-    // Send the message after stopping the listening
     String message = _messageController.text.trim();
     if (message.isNotEmpty) {
-      // Add user's message to the chat
-      setState(() {
-        _messages.add({"type": "user", "text": message});
-      });
-
-      // Send the message to the chat API
-      await sendMessageToChatApi(message);
+      _messageController.clear();
+      await sendMessageToChatApi(message, false);
+      _messageController.clear();
     }
   }
 
@@ -302,12 +366,11 @@ class _ChatScreenState extends State<ChatScreen> {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // Check if location services are enabled
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      // Location services are not enabled, request user to enable it
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Location services are disabled. Please enable them.'),
           backgroundColor: Colors.red,
         ),
@@ -315,14 +378,13 @@ class _ChatScreenState extends State<ChatScreen> {
       return;
     }
 
-    // Check the location permission status
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        // Handle denial of permission
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Location permission denied.'),
             backgroundColor: Colors.red,
           ),
@@ -331,10 +393,10 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     }
 
-    // If permission is permanently denied, show message
     if (permission == LocationPermission.deniedForever) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
               'Location permission is permanently denied, we cannot access location.'),
           backgroundColor: Colors.red,
@@ -343,29 +405,20 @@ class _ChatScreenState extends State<ChatScreen> {
       return;
     }
 
-    // Get the current position of the device
-    Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
+    final position = await Geolocator.getCurrentPosition();
+    final locationMessage =
+        'موقعي الحالي: خط العرض: ${position.latitude} خط الطول اخبرني اين انا : ${position.longitude}';
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(locationMessage),
+        backgroundColor: Colors.blue,
+      ),
     );
-
-    // Log current position
-    log('Current position: Lat: ${position.latitude}, Long: ${position.longitude}');
-
-    // Add location information to the chat
-    setState(() {
-      _messages.add({
-        "type": "user",
-        "text":
-            'Current location: Lat: ${position.latitude}, Long: ${position.longitude}',
-      });
-    });
-
-    // Optionally, speak the location
-    _flutterTts.speak(
-        'Current location: Latitude: ${position.latitude}, Longitude: ${position.longitude}');
+    await sendMessageToChatApi(locationMessage, true);
   }
 
-  // Function to build the chat message UI
+  // Build method for UI
   Widget _buildMessage(Map<String, dynamic> message) {
     bool isUser = message["type"] == "user";
     File? imageFile = message["image"];
@@ -398,16 +451,17 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chat with AI, Image, & Voice'),
+        title: const Text("Chat App"),
+        centerTitle: true,
       ),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
-              reverse: true,
               itemCount: _messages.length,
               itemBuilder: (context, index) {
-                return _buildMessage(_messages[_messages.length - 1 - index]);
+                final message = _messages[index];
+                return _buildMessage(message);
               },
             ),
           ),
@@ -416,63 +470,37 @@ class _ChatScreenState extends State<ChatScreen> {
               padding: EdgeInsets.all(8.0),
               child: CircularProgressIndicator(),
             ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    onSubmitted: (value) {
-                      sendMessageToChatApi(value);
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.mic),
+                color: _isListening ? Colors.red : Colors.blue,
+                onPressed: _isListening ? stopListening : startListening,
+              ),
+              Expanded(
+                child: TextField(
+                  controller: _messageController,
+                  decoration: const InputDecoration(
+                    hintText: "Type your message",
+                  ),
+                  onSubmitted: (value) async {
+                    if (value.isNotEmpty) {
+                      await sendMessageToChatApi(value, false);
                       _messageController.clear();
-                    },
-                    decoration: InputDecoration(
-                      hintText: "Type or use the mic...",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
+                    }
+                  },
                 ),
-                const SizedBox(width: 10),
-                GestureDetector(
-                  onTap: _isListening ? stopListening : startListening,
-                  child: CircleAvatar(
-                    radius: 25,
-                    backgroundColor: _isListening ? Colors.red : Colors.green,
-                    child: Icon(
-                      _isListening ? Icons.mic_off : Icons.mic,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                GestureDetector(
-                  onTap: () => pickImage(_messageController.text),
-                  child: const CircleAvatar(
-                    radius: 25,
-                    backgroundColor: Colors.blue,
-                    child: Icon(
-                      Icons.image,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                GestureDetector(
-                  onTap: getCurrentLocation,
-                  child: const CircleAvatar(
-                    radius: 25,
-                    backgroundColor: Colors.orange,
-                    child: Icon(
-                      Icons.location_on,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.send),
+                onPressed: () async {
+                  if (_messageController.text.isNotEmpty) {
+                    await sendMessageToChatApi(_messageController.text, false);
+                    _messageController.clear();
+                  }
+                },
+              ),
+            ],
           ),
         ],
       ),
