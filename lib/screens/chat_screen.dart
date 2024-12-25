@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:url_launcher/url_launcher_string.dart';
 import '../services/chat_service.dart';
 import '../services/location_service.dart';
 import '../models/chat_message.dart';
@@ -48,12 +50,17 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _handleImagePicking(ImageSource source, String message) async {
     try {
-      final XFile? pickedFile = await _picker.pickImage(source: source);
+      final XFile? pickedFile = await _picker.pickImage(
+          requestFullMetadata: false,
+          maxHeight: 800,
+          maxWidth: 800,
+          imageQuality: 50,
+          source: source);
       if (pickedFile != null) {
         var imageBytes = await pickedFile.readAsBytes();
         setState(() {
           _imageFile = File(pickedFile.path);
-          _base64Image =  base64Encode(imageBytes).toString();
+          _base64Image = base64Encode(imageBytes).toString();
         });
         await _processAndSendImage(message);
       }
@@ -108,7 +115,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     try {
       final response = await ChatService.sendMessage(text);
-
+      log('response: $response');
       final aiMessage = ChatMessage(
         type: 'ai',
         text: response["message"],
@@ -122,6 +129,8 @@ class _ChatScreenState extends State<ChatScreen> {
         await _handleImagePicking(ImageSource.camera, 'ماذا يوجد في الصورة ؟');
       } else if (aiMessage.order == 'LOCATION') {
         await _handleLocationRequest();
+      } else if (aiMessage.order == 'PHONE') {
+        _launchPhone(aiMessage.text!);
       }
     } catch (e) {
       _showErrorSnackBar('Error sending message: $e');
@@ -130,6 +139,19 @@ class _ChatScreenState extends State<ChatScreen> {
         _isLoading = false;
         _messageController.clear();
       });
+    }
+  }
+
+  Future<void> _launchPhone(String phone) async {
+    try {
+      final url = 'tel:+201007504615';
+      if (await canLaunchUrlString(url)) {
+        await launchUrlString(url);
+      } else {
+        _showErrorSnackBar('Could not launch $url');
+      }
+    } catch (e) {
+      _showErrorSnackBar('Error launching phone: $e');
     }
   }
 
@@ -205,31 +227,18 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildInputArea() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        children: [
-          IconButton(
-            icon: Icon(_isListening ? Icons.stop : Icons.mic),
-            color: _isListening ? Colors.red : Colors.blue,
-            onPressed: _toggleListening,
-          ),
-          Expanded(
-            child: TextField(
-              controller: _messageController,
-              decoration: const InputDecoration(
-                hintText: "Type your message",
-                border: OutlineInputBorder(),
-              ),
-              onSubmitted: _handleMessageSubmit,
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.send),
-            onPressed: () => _handleMessageSubmit(_messageController.text),
-          ),
-        ],
+  Widget _buildVoiceMicButton() {
+    return InkWell(
+      onTap: _toggleListening,
+      child: SizedBox(
+        width: double.infinity,
+        child: ColoredBox(
+            color: Colors.blue,
+            child: Icon(
+              _isListening ? Icons.stop : Icons.mic,
+              color: _isListening ? Colors.red : Colors.white,
+              size: 70,
+            )),
       ),
     );
   }
@@ -238,25 +247,33 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Chat App"),
+        title: const Text(
+          "بصير",
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.blue,
+        shadowColor: Colors.transparent,
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.camera_alt),
+            icon: const Icon(Icons.camera_alt, color: Colors.white),
             onPressed: () => _handleImagePicking(
               ImageSource.camera,
               'ماذا يوجد في الصورة ؟',
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.image),
+            icon: const Icon(
+              Icons.image,
+              color: Colors.white,
+            ),
             onPressed: () => _handleImagePicking(
               ImageSource.gallery,
               'ماذا يوجد في الصورة ؟',
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.location_on),
+            icon: const Icon(Icons.location_on, color: Colors.white),
             onPressed: _handleLocationRequest,
           ),
         ],
@@ -276,7 +293,7 @@ class _ChatScreenState extends State<ChatScreen> {
               padding: EdgeInsets.all(8.0),
               child: CircularProgressIndicator(),
             ),
-          _buildInputArea(),
+          _buildVoiceMicButton(),
         ],
       ),
     );

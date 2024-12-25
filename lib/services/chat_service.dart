@@ -26,7 +26,7 @@ class ChatService {
       Uri.parse("$_baseUrl/image"),
       headers: {"Content-Type": "application/json; charset=utf-8"},
       body: jsonEncode({
-        "message":message.toString(),
+        "message": message.toString(),
         "image": base64Image,
       }),
     );
