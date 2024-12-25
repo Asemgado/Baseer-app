@@ -73,7 +73,6 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     try {
-
       final base64Image = 'data:image/jpeg;base64,$_base64Image';
 
       final response = await ChatService.sendImage(message, base64Image);
@@ -88,7 +87,6 @@ class _ChatScreenState extends State<ChatScreen> {
     } catch (e) {
       _showErrorSnackBar('Error processing image: $e');
     } finally {
-
       setState(() {
         _isLoading = false;
         _imageFile = null;
@@ -127,7 +125,6 @@ class _ChatScreenState extends State<ChatScreen> {
     } catch (e) {
       _showErrorSnackBar('Error sending message: $e');
     } finally {
-
       setState(() {
         _isLoading = false;
         _messageController.clear();
@@ -186,7 +183,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _speakMessage(String message) async {
-
     try {
       await _flutterTts.speak(message);
     } catch (e) {
