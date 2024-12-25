@@ -73,19 +73,16 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     try {
-      final image = img.decodeImage(_imageFile!.readAsBytesSync());
-      if (image == null) throw Exception("Failed to decode image");
-
-      final jpegImage = img.encodeJpg(image);
-      final base64Image = 'data:image/jpeg;base64,${base64Encode(jpegImage)}';
+      // Directly use the _base64Image that was already encoded properly
+      final base64Image = 'data:image/jpeg;base64,$_base64Image';
 
       final response = await ChatService.sendImage(message, base64Image);
-      
+    
       final aiMessage = ChatMessage(
         type: 'ai',
         text: response["message"] ?? "Image processed successfully.",
       );
-      
+    
       _addMessage(aiMessage);
       await _speakMessage(aiMessage.text!);
     } catch (e) {
