@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:http/http.dart' as http;
 
 class ChatService {
@@ -18,12 +19,14 @@ class ChatService {
     }
   }
 
-  static Future<Map<String, dynamic>> sendImage(String message, String base64Image) async {
+  static Future<Map<String, dynamic>> sendImage(
+      String message, String base64Image) async {
+    log(base64Image);
     final response = await http.post(
       Uri.parse("$_baseUrl/image"),
       headers: {"Content-Type": "application/json; charset=utf-8"},
       body: jsonEncode({
-        "message": utf8.encode(message).toString(),
+        "message":message.toString(),
         "image": base64Image,
       }),
     );
@@ -31,7 +34,8 @@ class ChatService {
     if (response.statusCode == 200) {
       return jsonDecode(utf8.decode(response.bodyBytes));
     } else {
-      throw Exception("Failed to process image: ${response.statusCode}");
+      log(response.body);
+      throw Exception("Failed to process image: ${response.body}");
     }
   }
 }

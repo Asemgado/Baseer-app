@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.6.0
+  sdk: ^3.5.0
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -31,10 +31,10 @@ dependencies:
   flutter:
     sdk: flutter
   image_picker: ^1.1.2
-  flutter_tts: ^4.2.0
+  flutter_tts: ^4.2.1
   speech_to_text: ^7.0.0
   geolocator: ^13.0.2
-  http: ^1.2.0
+  http: ^1.2.2
 
 dev_dependencies:
   flutter_test:

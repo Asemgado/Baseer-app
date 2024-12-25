@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:image/image.dart' as img;
 import '../services/chat_service.dart';
 import '../services/location_service.dart';
 import '../models/chat_message.dart';
@@ -23,7 +22,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final stt.SpeechToText _speechToText = stt.SpeechToText();
   final TextEditingController _messageController = TextEditingController();
   final List<ChatMessage> _messages = [];
-  
+
   bool _isLoading = false;
   bool _isListening = false;
   File? _imageFile;
@@ -54,12 +53,13 @@ class _ChatScreenState extends State<ChatScreen> {
         var imageBytes = await pickedFile.readAsBytes();
         setState(() {
           _imageFile = File(pickedFile.path);
-          _base64Image = base64Encode(imageBytes);
+          _base64Image =  base64Encode(imageBytes).toString();
         });
         await _processAndSendImage(message);
       }
     } catch (e) {
       _showErrorSnackBar('Error picking image: $e');
+      [];
     }
   }
 
@@ -73,15 +73,15 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     try {
-      final base64Image = 'data:image/jpeg;base64,$_base64Image';
+      final base64Image = _base64Image!;
 
       final response = await ChatService.sendImage(message, base64Image);
-    
+
       final aiMessage = ChatMessage(
         type: 'ai',
         text: response["message"] ?? "Image processed successfully.",
       );
-    
+
       _addMessage(aiMessage);
       await _speakMessage(aiMessage.text!);
     } catch (e) {
@@ -95,7 +95,8 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Future<void> _handleMessageSubmit(String text, {bool isLocation = false}) async {
+  Future<void> _handleMessageSubmit(String text,
+      {bool isLocation = false}) async {
     if (text.isEmpty) return;
 
     setState(() {
@@ -107,13 +108,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
     try {
       final response = await ChatService.sendMessage(text);
-      
+
       final aiMessage = ChatMessage(
         type: 'ai',
         text: response["message"],
         order: response["order"],
       );
-      
+
       _addMessage(aiMessage);
       await _speakMessage(aiMessage.text!);
 
@@ -136,8 +137,8 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final position = await LocationService.getCurrentLocation();
       if (position != null) {
-        final locationMessage = 
-          'موقعي الحالي: خط العرض: ${position.latitude} خط الطول اخبرني اين انا : ${position.longitude}';
+        final locationMessage =
+            'موقعي الحالي: خط العرض: ${position.latitude} خط الطول اخبرني اين انا : ${position.longitude}';
         await _handleMessageSubmit(locationMessage, isLocation: true);
       }
     } catch (e) {
