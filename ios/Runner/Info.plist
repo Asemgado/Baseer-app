@@ -45,5 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs access to microphone for voice chat</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs access to camera for image capture</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs access to location for location sharing</string>
 </dict>
 </plist>
