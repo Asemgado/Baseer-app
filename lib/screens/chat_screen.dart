@@ -256,24 +256,27 @@ class _ChatScreenState extends State<ChatScreen> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.camera_alt, color: Colors.white),
+            //icon: const Icon(Icons.camera_alt, color: Colors.white),
+            icon: Image.asset('assets/scanner.png'),
             onPressed: () => _handleImagePicking(
               ImageSource.camera,
               'ماذا يوجد في الصورة ؟',
             ),
           ),
           IconButton(
-            icon: const Icon(
-              Icons.image,
-              color: Colors.white,
-            ),
+            // icon: const Icon(
+            //   Icons.image,
+            //   color: Colors.white,
+            // ),
+            icon: Image.asset('assets/picture.png'),
             onPressed: () => _handleImagePicking(
               ImageSource.gallery,
               'ماذا يوجد في الصورة ؟',
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.location_on, color: Colors.white),
+            //  icon: const Icon(Icons.location_on, color: Colors.white),
+            icon: Image.asset('assets/location.png'),
             onPressed: _handleLocationRequest,
           ),
         ],
