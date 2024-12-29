@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'package:baseer/widgets/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -144,7 +145,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _launchPhone(String phone) async {
     try {
-      final url = 'tel:+201007504615';
+      final url = 'tel:+201010707164';
       if (await canLaunchUrlString(url)) {
         await launchUrlString(url);
       } else {
@@ -249,40 +250,110 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         title: const Text(
           "بصير",
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+            color: Colors.white, // لون النص
+            fontSize: 28, // حجم الخط
+            fontWeight: FontWeight.bold, // وزن الخط
+            fontFamily:
+                'Cairo', // يمكنك استخدام خط مخصص إذا كنت قد أضفته إلى المشروع
+            shadows: [
+              Shadow(
+                offset: Offset(2, 2), // اتجاه الظل
+                color: Colors.black26, // لون الظل
+                blurRadius: 4, // شدة التمويه للظل
+              ),
+            ],
+          ),
+          // "بصير",
+          // style: TextStyle(color: Colors.white),
         ),
         backgroundColor: Colors.blue,
         shadowColor: Colors.transparent,
         centerTitle: true,
-        actions: [
-          IconButton(
-            //icon: const Icon(Icons.camera_alt, color: Colors.white),
-            icon: Image.asset('assets/scanner.png'),
-            onPressed: () => _handleImagePicking(
-              ImageSource.camera,
-              'ماذا يوجد في الصورة ؟',
-            ),
-          ),
-          IconButton(
-            // icon: const Icon(
-            //   Icons.image,
-            //   color: Colors.white,
-            // ),
-            icon: Image.asset('assets/picture.png'),
-            onPressed: () => _handleImagePicking(
-              ImageSource.gallery,
-              'ماذا يوجد في الصورة ؟',
-            ),
-          ),
-          IconButton(
-            //  icon: const Icon(Icons.location_on, color: Colors.white),
-            icon: Image.asset('assets/location.png'),
-            onPressed: _handleLocationRequest,
-          ),
-        ],
       ),
       body: Column(
         children: [
+          // الشريط المخصص للأيقونات
+          Container(
+            color: Colors.blue.shade100, // لون الخلفية للشريط
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                GestureDetector(
+                  onTap: () => _handleImagePicking(
+                    ImageSource.camera,
+                    'ماذا يوجد في الصورة ؟',
+                  ),
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        'assets/scanner.png',
+                        width: 60, // حجم الأيقونة
+                        height: 60,
+                      ),
+                      const SizedBox(height: 4),
+                      const Text("الكاميرا", style: TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => _handleImagePicking(
+                    ImageSource.gallery,
+                    'ماذا يوجد في الصورة ؟',
+                  ),
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        'assets/picture.png',
+                        width: 60,
+                        height: 60,
+                      ),
+                      const SizedBox(height: 4),
+                      const Text("المعرض", style: TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: _handleLocationRequest,
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        'assets/location.png',
+                        width: 60,
+                        height: 60,
+                      ),
+                      const SizedBox(height: 4),
+                      const Text("الموقع", style: TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PersonalInfoPage(),
+                      ),
+                    );
+                  },
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        'assets/profile.png',
+                        width: 60,
+                        height: 60,
+                      ),
+                      const SizedBox(height: 4),
+                      const Text("الملف الشخصي",
+                          style: TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // باقي محتويات الصفحة
           Expanded(
             child: ListView.builder(
               itemCount: _messages.length,

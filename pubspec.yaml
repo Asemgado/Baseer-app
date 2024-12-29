@@ -64,6 +64,7 @@ flutter:
     - assets/location.png
     - assets/scanner.png
     - assets/picture.png
+    - assets/profile.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
