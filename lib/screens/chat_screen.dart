@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'package:baseer/widgets/profile.dart';
+import 'package:baseer/screens/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -11,6 +11,7 @@ import '../services/chat_service.dart';
 import '../services/location_service.dart';
 import '../models/chat_message.dart';
 import '../widgets/message_bubble.dart';
+import 'package:just_audio/just_audio.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -25,6 +26,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final stt.SpeechToText _speechToText = stt.SpeechToText();
   final TextEditingController _messageController = TextEditingController();
   final List<ChatMessage> _messages = [];
+  late AudioPlayer _audioPlayer;
 
   bool _isLoading = false;
   bool _isListening = false;
@@ -34,6 +36,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    _audioPlayer = AudioPlayer();
     _initializeServices();
   }
 
@@ -131,7 +134,7 @@ class _ChatScreenState extends State<ChatScreen> {
       } else if (aiMessage.order == 'LOCATION') {
         await _handleLocationRequest();
       } else if (aiMessage.order == 'PHONE') {
-        _launchPhone(aiMessage.text!);
+        await _launchPhone(aiMessage.text!);
       }
     } catch (e) {
       _showErrorSnackBar('Error sending message: $e');
@@ -143,16 +146,28 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Future<void> _launchPhone(String phone) async {
+  Future<void> _launchPhone(String phoneNumber) async {
     try {
-      final url = 'tel:+201010707164';
+      // Validate phone number format
+
+      final url = 'tel:+2$phoneNumber';
+
+      // Check if can launch before attempting
       if (await canLaunchUrlString(url)) {
-        await launchUrlString(url);
+        final bool launched = await launchUrlString(
+          url,
+          mode: LaunchMode.externalApplication,
+        );
+
+        if (!launched) {
+          _showErrorSnackBar('لا يمكن الاتصال بالرقم: $phoneNumber');
+        }
       } else {
-        _showErrorSnackBar('Could not launch $url');
+        print("$phoneNumber");
+        _showErrorSnackBar('لا يمكن إجراء المكالمة');
       }
     } catch (e) {
-      _showErrorSnackBar('Error launching phone: $e');
+      _showErrorSnackBar('خطأ في الاتصال: $e');
     }
   }
 
@@ -228,6 +243,15 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  Future<void> _playClickAndSpeak(String text) async {
+    // تشغيل صوت النقر
+    await _audioPlayer.setAsset('assets/click.mp3');
+    await _audioPlayer.play();
+
+    // قراءة النص
+    await _flutterTts.speak(text);
+  }
+
   Widget _buildVoiceMicButton() {
     return InkWell(
       onTap: _toggleListening,
@@ -281,10 +305,13 @@ class _ChatScreenState extends State<ChatScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 GestureDetector(
-                  onTap: () => _handleImagePicking(
-                    ImageSource.camera,
-                    'ماذا يوجد في الصورة ؟',
-                  ),
+                  onTap: () => {
+                    _playClickAndSpeak("الكاميرا"),
+                    _handleImagePicking(
+                      ImageSource.camera,
+                      'ماذا يوجد في الصورة ؟',
+                    ),
+                  },
                   child: Column(
                     children: [
                       Image.asset(
@@ -298,10 +325,13 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () => _handleImagePicking(
-                    ImageSource.gallery,
-                    'ماذا يوجد في الصورة ؟',
-                  ),
+                  onTap: () => {
+                    _playClickAndSpeak("المعرض"),
+                    _handleImagePicking(
+                      ImageSource.gallery,
+                      'ماذا يوجد في الصورة ؟',
+                    ),
+                  },
                   child: Column(
                     children: [
                       Image.asset(
@@ -315,7 +345,10 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: _handleLocationRequest,
+                  onTap: () {
+                    _playClickAndSpeak("الموقع");
+                    _handleLocationRequest();
+                  },
                   child: Column(
                     children: [
                       Image.asset(
@@ -330,10 +363,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 GestureDetector(
                   onTap: () {
+                    _playClickAndSpeak("الملف الشخصي");
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => PersonalInfoPage(),
+                        builder: (context) => ProfilePage(),
                       ),
                     );
                   },

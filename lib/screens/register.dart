@@ -1,26 +1,37 @@
+import 'package:baseer/screens/chat_screen.dart';
+import 'package:baseer/screens/login.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class PersonalInfoPage extends StatefulWidget {
-  const PersonalInfoPage({Key? key}) : super(key: key);
+import 'package:shared_preferences/shared_preferences.dart';
+
+class Register extends StatefulWidget {
+  const Register({Key? key}) : super(key: key);
 
   @override
-  _PersonalInfoPageState createState() => _PersonalInfoPageState();
+  _RegisterState createState() => _RegisterState();
 }
 
-class _PersonalInfoPageState extends State<PersonalInfoPage> {
+class _RegisterState extends State<Register> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _ageController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _medicalConditionsController =
-      TextEditingController();
-  final TextEditingController _responsibleNumberController =
+  final TextEditingController _illnessController = TextEditingController();
+  final TextEditingController _genderController = TextEditingController();
+  final TextEditingController _ageController = TextEditingController();
+  final TextEditingController _emergencyContactController =
       TextEditingController();
 
   bool _isLoading = false;
+  Future<void> _cacheUserData(Map<String, dynamic> userData) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_id', userData['id'].toString());
+    // await prefs.setString('username', userData['username'] ?? '');
+    // You can cache more user data as needed
+  }
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
@@ -29,55 +40,63 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
       });
 
       try {
-        final Map<String, dynamic> requestBody = {
-          'name': _nameController.text,
-          'age': int.parse(_ageController.text),
-          'phone': _phoneController.text,
-          'address': _addressController.text,
-          'medical_conditions': _medicalConditionsController.text,
-          'responsible_number': _responsibleNumberController.text,
+        Map<String, String> requestBody = {
+          'username': _usernameController.text.trim(),
+          'password': _passwordController.text.trim(),
+          'phone': _phoneController.text.trim(),
+          'address': _addressController.text.trim(),
+          'illness': _illnessController.text.trim(),
+          'gender': _genderController.text.trim(),
+          'age': _ageController.text.trim(),
+          'imergency_contact': _emergencyContactController.text.trim(),
         };
-
-        print('Sending request with body: $requestBody');
-
         final response = await http.post(
-          Uri.parse("https://basser-api.vercel.app"),
-          headers: {
-            'Content-Type': 'application/json',
+          Uri.parse("https://basser-api.vercel.app/registeration"),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
             'Accept': 'application/json',
           },
-          body: json.encode(requestBody),
+          body: jsonEncode(requestBody),
         );
 
-        print('Response status: ${response.statusCode}');
-        print('Response body: ${response.body}');
-
         if (response.statusCode == 200 || response.statusCode == 201) {
-          _formKey.currentState?.reset();
-          _clearForm();
-
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('تم إرسال البيانات بنجاح'),
                 backgroundColor: Colors.green,
+                duration: Duration(seconds: 3),
               ),
             );
+            _cacheUserData(requestBody);
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => ChatScreen()),
+            );
+
+            // _formKey.currentState?.reset();
+            // _clearForm();
           }
         } else {
-          Map<String, dynamic> errorResponse = json.decode(response.body);
-          String errorMessage =
-              errorResponse['message'] ?? 'فشل في إرسال البيانات';
-          throw Exception(errorMessage);
+          // محاولة تحليل رسالة الخطأ من الاستجابة
+          Map<String, dynamic> errorResponse;
+          try {
+            errorResponse = jsonDecode(response.body);
+          } catch (e) {
+            errorResponse = {'message': 'حدث خطأ غير متوقع'};
+          }
+
+          throw Exception(errorResponse['detail'] ??
+              errorResponse['message'] ??
+              'فشل في إرسال البيانات');
         }
       } catch (e) {
-        print('Error during form submission: $e');
-
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('خطأ: ${e.toString()}'),
               backgroundColor: Colors.red,
+              duration: const Duration(seconds: 5),
             ),
           );
         }
@@ -91,24 +110,11 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
     }
   }
 
-  void _clearForm() {
-    _nameController.clear();
-    _ageController.clear();
-    _phoneController.clear();
-    _addressController.clear();
-    _medicalConditionsController.clear();
-    _responsibleNumberController.clear();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('ملف شخصي'),
-          backgroundColor: Colors.green,
-        ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Form(
@@ -116,33 +122,33 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                SizedBox(
+                  height: 50,
+                ),
                 TextFormField(
-                  controller: _nameController,
+                  controller: _usernameController,
                   decoration: const InputDecoration(
-                    labelText: 'الاسم',
+                    labelText: 'اسم المستخدم',
                     border: OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'الرجاء إدخال الاسم';
+                      return 'الرجاء إدخال اسم المستخدم';
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _ageController,
+                  controller: _passwordController,
                   decoration: const InputDecoration(
-                    labelText: 'السن',
+                    labelText: 'كلمة المرور',
                     border: OutlineInputBorder(),
                   ),
-                  keyboardType: TextInputType.number,
+                  obscureText: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'الرجاء إدخال السن';
-                    }
-                    if (int.tryParse(value) == null) {
-                      return 'الرجاء إدخال رقم صحيح';
+                      return 'الرجاء إدخال كلمة المرور';
                     }
                     return null;
                   },
@@ -179,24 +185,53 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _medicalConditionsController,
+                  controller: _illnessController,
                   decoration: const InputDecoration(
-                    labelText: 'امراض',
+                    labelText: 'الأمراض',
                     border: OutlineInputBorder(),
                   ),
                   maxLines: 2,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _responsibleNumberController,
+                  controller: _genderController,
                   decoration: const InputDecoration(
-                    labelText: 'رقم المسؤول',
+                    labelText: 'الجنس',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'الرجاء إدخال الجنس';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _ageController,
+                  decoration: const InputDecoration(
+                    labelText: 'العمر',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'الرجاء إدخال العمر';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _emergencyContactController,
+                  decoration: const InputDecoration(
+                    labelText: 'رقم الطوارئ',
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.phone,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'الرجاء إدخال رقم المسؤول';
+                      return 'الرجاء إدخال رقم الطوارئ';
                     }
                     return null;
                   },
@@ -213,11 +248,22 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : const Text(
-                            'حفظ البيانات',
+                            'تسجيل دخول',
                             style: TextStyle(fontSize: 16),
                           ),
                   ),
                 ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton(
+                        onPressed: () {
+                          Navigator.push(context,
+                              MaterialPageRoute(builder: (context) => Login()));
+                        },
+                        child: Text('لدي حساب')),
+                  ],
+                )
               ],
             ),
           ),
@@ -228,12 +274,14 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _ageController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
     _phoneController.dispose();
     _addressController.dispose();
-    _medicalConditionsController.dispose();
-    _responsibleNumberController.dispose();
+    _illnessController.dispose();
+    _genderController.dispose();
+    _ageController.dispose();
+    _emergencyContactController.dispose();
     super.dispose();
   }
 }
