@@ -71,9 +71,9 @@ class _LoginState extends State<Login> {
             );
             // Navigate to home or profile page
             _cacheUserData(responseData);
-            Navigator.pushReplacement(
+            Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (context) => ChatScreen()),
+              MaterialPageRoute(builder: (context) => ChatScreen()),(route) => false,
             );
           }
         } else {

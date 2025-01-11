@@ -24,7 +24,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _fetchUserData() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final userId = await prefs.getString('user_id');
+    final userId = prefs.getString('user_id');
     // int id = int.parse(userId!);
     try {
       final response = await http.get(
@@ -84,7 +84,6 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(),
             Text(
               title,
               style: const TextStyle(
@@ -124,38 +123,42 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-                onRefresh: _fetchUserData,
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      Text(
-                        _userData['data'][1] ?? 'المستخدم',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+            : _userData.isEmpty
+                ? Center(child: Text('لا يوجد بيانات'))
+                : RefreshIndicator(
+                    onRefresh: _fetchUserData,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Center(
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 20),
+                            Text(
+                              _userData['data'][1] ?? 'المستخدم',
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            _buildInfoCard(
+                                'الهاتف', _userData['data'][3] ?? 'غير متوفر'),
+                            _buildInfoCard(
+                                'العنوان', _userData['data'][4] ?? 'غير متوفر'),
+                            _buildInfoCard(
+                                'الأمراض', _userData['data'][5] ?? 'غير متوفر'),
+                            _buildInfoCard(
+                                'الجنس', _userData['data'][6] ?? 'غير متوفر'),
+                            _buildInfoCard('العمر',
+                                _userData['data'][7]?.toString() ?? 'غير متوفر'),
+                            _buildInfoCard('رقم الطوارئ',
+                                _userData['data'][8] ?? 'غير متوفر'),
+                            const SizedBox(height: 20),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      _buildInfoCard(
-                          'الهاتف', _userData['data'][3] ?? 'غير متوفر'),
-                      _buildInfoCard(
-                          'العنوان', _userData['data'][4] ?? 'غير متوفر'),
-                      _buildInfoCard(
-                          'الأمراض', _userData['data'][5] ?? 'غير متوفر'),
-                      _buildInfoCard(
-                          'الجنس', _userData['data'][6] ?? 'غير متوفر'),
-                      _buildInfoCard('العمر',
-                          _userData['data'][7]?.toString() ?? 'غير متوفر'),
-                      _buildInfoCard(
-                          'رقم الطوارئ', _userData['data'][8] ?? 'غير متوفر'),
-                      const SizedBox(height: 20),
-                    ],
+                    ),
                   ),
-                ),
-              ),
       ),
     );
   }

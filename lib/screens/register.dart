@@ -69,9 +69,9 @@ class _RegisterState extends State<Register> {
               ),
             );
             _cacheUserData(requestBody);
-            Navigator.pushReplacement(
+            Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (context) => ChatScreen()),
+              MaterialPageRoute(builder: (context) => ChatScreen()),(route) => false,
             );
 
             // _formKey.currentState?.reset();
