@@ -155,7 +155,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           children: [
                             const SizedBox(height: 20),
                             Text(
-                              _userData['data'][1] ?? 'المستخدم',
+                              _userData['username'] ?? 'المستخدم',
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -163,17 +163,17 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             const SizedBox(height: 20),
                             _buildInfoCard(
-                                'الهاتف', _userData['data'][3] ?? 'غير متوفر'),
+                                'الهاتف', _userData['phone'] ?? 'غير متوفر'),
                             _buildInfoCard(
-                                'العنوان', _userData['data'][4] ?? 'غير متوفر'),
+                                'العنوان', _userData['address'] ?? 'غير متوفر'),
                             _buildInfoCard(
-                                'الأمراض', _userData['data'][5] ?? 'غير متوفر'),
+                                'الأمراض', _userData['illness'] ?? 'غير متوفر'),
                             _buildInfoCard(
-                                'الجنس', _userData['data'][6] ?? 'غير متوفر'),
+                                'الجنس', _userData['gender'] ?? 'غير متوفر'),
                             _buildInfoCard('العمر',
-                                _userData['data'][7]?.toString() ?? 'غير متوفر'),
+                                _userData['age']?.toString() ?? 'غير متوفر'),
                             _buildInfoCard('رقم الطوارئ',
-                                _userData['data'][8] ?? 'غير متوفر'),
+                                _userData['imergency_contact'] ?? 'غير متوفر'),
                             const SizedBox(height: 20),
                           ],
                         ),

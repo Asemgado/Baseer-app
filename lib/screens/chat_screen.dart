@@ -138,6 +138,8 @@ class _ChatScreenState extends State<ChatScreen> {
         await _handleLocationRequest();
       } else if (aiMessage.order == 'PHONE') {
         await _launchPhone(aiMessage.text!);
+      } else if (aiMessage.order == 'EMERGENCY') {
+        await _sendEmergencyMessage();
       }
       // else if (aiMessage.order == 'WHATSAPP') {
       //
@@ -175,6 +177,24 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     } catch (e) {
       _showErrorSnackBar('خطأ في الاتصال: $e');
+    }
+  }
+
+  Future<void> _sendEmergencyMessage() async {
+    try {
+      // Validate phone number format
+
+      final location = await LocationService.getCurrentLocation();
+
+      if (location != null) {
+        final locationMessage =
+            'موقعي الحالي: خط العرض: ${location.latitude} خط الطول: ${location.longitude}';
+        await ChatService.sendEmergency(locationMessage);
+      } else {
+        throw Exception('لا يمكن الحصول على الموقع');
+      }
+    } catch (e) {
+      _showErrorSnackBar(e.toString());
     }
   }
 

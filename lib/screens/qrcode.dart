@@ -112,7 +112,8 @@ class ResultScreen extends StatelessWidget {
               icon: const Icon(Icons.open_in_new),
               label: const Text('فتح الرابط'),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
               ),
             ),
           ],

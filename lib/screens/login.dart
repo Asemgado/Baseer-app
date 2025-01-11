@@ -65,7 +65,8 @@ class _LoginState extends State<Login> {
             _cacheUserData(responseData);
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (context) => ChatScreen()),(route) => false,
+              MaterialPageRoute(builder: (context) => ChatScreen()),
+              (route) => false,
             );
           }
         } else {

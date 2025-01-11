@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatService {
   static const String _baseUrl = "https://basser-api.vercel.app";
@@ -10,6 +11,21 @@ class ChatService {
       Uri.parse("$_baseUrl/chat"),
       headers: {"Content-Type": "application/json; charset=utf-8"},
       body: utf8.encode(jsonEncode({"message": message})),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(utf8.decode(response.bodyBytes));
+    } else {
+      throw Exception("Failed to send message: ${response.statusCode}");
+    }
+  }
+
+  static Future<Map<String, dynamic>> sendEmergency(String message) async {
+    final userID = (await SharedPreferences.getInstance()).getString('user_id');
+    final response = await http.post(
+      Uri.parse("$_baseUrl/whatsapp"),
+      headers: {"Content-Type": "application/json; charset=utf-8"},
+      body: utf8.encode(jsonEncode({'user_id': userID, "message": message})),
     );
 
     if (response.statusCode == 200) {
