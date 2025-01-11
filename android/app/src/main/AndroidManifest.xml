@@ -61,4 +61,21 @@
     <action android:name="android.support.customtabs.action.CustomTabsService" />
   </intent>
     </queries>
+    <queries>
+    <intent>
+        <action android:name="android.intent.action.VIEW" />
+        <data android:scheme="http" />
+    </intent>
+    <intent>
+        <action android:name="android.intent.action.VIEW" />
+        <data android:scheme="https" />
+    </intent>
+</queries>
+<!-- <queries>
+    <package android:name="com.whatsapp" />
+    <intent>
+        <action android:name="android.intent.action.VIEW" />
+        <data android:scheme="whatsapp" />
+    </intent>
+</queries> -->
 </manifest>

@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:baseer/screens/profile.dart';
+import 'package:baseer/screens/qrcode.dart';
+import 'package:baseer/services/battery_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -26,6 +28,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final stt.SpeechToText _speechToText = stt.SpeechToText();
   final TextEditingController _messageController = TextEditingController();
   final List<ChatMessage> _messages = [];
+  final BatteryService _batteryService = BatteryService();
   late AudioPlayer _audioPlayer;
 
   bool _isLoading = false;
@@ -136,6 +139,10 @@ class _ChatScreenState extends State<ChatScreen> {
       } else if (aiMessage.order == 'PHONE') {
         await _launchPhone(aiMessage.text!);
       }
+      // else if (aiMessage.order == 'WHATSAPP') {
+      //
+      //   await launchWhatsApp(aiMessage.text!, message:'برجاء الاتصال بي');
+      // }
     } catch (e) {
       _showErrorSnackBar('Error sending message: $e');
     } finally {
@@ -170,6 +177,47 @@ class _ChatScreenState extends State<ChatScreen> {
       _showErrorSnackBar('خطأ في الاتصال: $e');
     }
   }
+
+  // Future<void> launchWhatsApp(String phoneNumber, {String message = ''}) async {
+  //   try {
+  //     // Remove any non-numeric characters from phone number
+  //     //final cleanNumber = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
+
+  //     // URL encode the message
+  //     final encodedMessage = Uri.encodeComponent(message);
+
+  //     // WhatsApp URL scheme with country code (Egypt +20) and message
+  //     final url = 'whatsapp://send?phone=20$phoneNumber&text=$encodedMessage';
+
+  //     // Alternative URL for web WhatsApp
+  //     final webUrl = 'https://wa.me/20$phoneNumber?text=$encodedMessage';
+
+  //     if (await canLaunchUrlString(url)) {
+  //       final bool launched = await launchUrlString(
+  //         url,
+  //         mode: LaunchMode.externalApplication,
+  //       );
+
+  //       if (!launched) {
+  //         // Try web URL as fallback
+  //         if (await canLaunchUrlString(webUrl)) {
+  //           await launchUrlString(webUrl);
+  //         } else {
+  //           _showErrorSnackBar('لا يمكن فتح واتساب');
+  //         }
+  //       }
+  //     } else {
+  //       // Try web URL if app URL fails
+  //       if (await canLaunchUrlString(webUrl)) {
+  //         await launchUrlString(webUrl);
+  //       } else {
+  //         _showErrorSnackBar('الرجاء التأكد من تثبيت واتساب');
+  //       }
+  //     }
+  //   } catch (e) {
+  //     _showErrorSnackBar('خطأ في فتح واتساب: $e');
+  //   }
+  // }
 
   Future<void> _handleLocationRequest() async {
     try {
@@ -258,7 +306,7 @@ class _ChatScreenState extends State<ChatScreen> {
       child: SizedBox(
         width: double.infinity,
         child: ColoredBox(
-            color: Colors.blue,
+            color: const Color.fromARGB(255, 22, 74, 117),
             child: Icon(
               _isListening ? Icons.stop : Icons.mic,
               color: _isListening ? Colors.red : Colors.white,
@@ -278,8 +326,6 @@ class _ChatScreenState extends State<ChatScreen> {
             color: Colors.white, // لون النص
             fontSize: 28, // حجم الخط
             fontWeight: FontWeight.bold, // وزن الخط
-            fontFamily:
-                'Cairo', // يمكنك استخدام خط مخصص إذا كنت قد أضفته إلى المشروع
             shadows: [
               Shadow(
                 offset: Offset(2, 2), // اتجاه الظل
@@ -288,10 +334,8 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ],
           ),
-          // "بصير",
-          // style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Colors.blue,
+        backgroundColor: const Color.fromARGB(255, 22, 74, 117),
         shadowColor: Colors.transparent,
         centerTitle: true,
       ),
@@ -299,68 +343,12 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           // الشريط المخصص للأيقونات
           Container(
-            color: Colors.blue.shade100, // لون الخلفية للشريط
+            color:
+                const Color.fromARGB(255, 165, 205, 238), // لون الخلفية للشريط
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                GestureDetector(
-                  onTap: () => {
-                    _playClickAndSpeak("الكاميرا"),
-                    _handleImagePicking(
-                      ImageSource.camera,
-                      'ماذا يوجد في الصورة ؟',
-                    ),
-                  },
-                  child: Column(
-                    children: [
-                      Image.asset(
-                        'assets/scanner.png',
-                        width: 60, // حجم الأيقونة
-                        height: 60,
-                      ),
-                      const SizedBox(height: 4),
-                      const Text("الكاميرا", style: TextStyle(fontSize: 12)),
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => {
-                    _playClickAndSpeak("المعرض"),
-                    _handleImagePicking(
-                      ImageSource.gallery,
-                      'ماذا يوجد في الصورة ؟',
-                    ),
-                  },
-                  child: Column(
-                    children: [
-                      Image.asset(
-                        'assets/picture.png',
-                        width: 60,
-                        height: 60,
-                      ),
-                      const SizedBox(height: 4),
-                      const Text("المعرض", style: TextStyle(fontSize: 12)),
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    _playClickAndSpeak("الموقع");
-                    _handleLocationRequest();
-                  },
-                  child: Column(
-                    children: [
-                      Image.asset(
-                        'assets/location.png',
-                        width: 60,
-                        height: 60,
-                      ),
-                      const SizedBox(height: 4),
-                      const Text("الموقع", style: TextStyle(fontSize: 12)),
-                    ],
-                  ),
-                ),
                 GestureDetector(
                   onTap: () {
                     _playClickAndSpeak("الملف الشخصي");
@@ -381,6 +369,109 @@ class _ChatScreenState extends State<ChatScreen> {
                       const SizedBox(height: 4),
                       const Text("الملف الشخصي",
                           style: TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                    onTap: () {
+                      _playClickAndSpeak("الماسح الضوئى");
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => QRScannerScreen()));
+                    },
+                    child: Column(
+                      children: [
+                        Image.asset(
+                          'assets/qrcode.png',
+                          width: 60,
+                          height: 60,
+                        ),
+                        const SizedBox(height: 4),
+                        const Text("الماسح الضوئي",
+                            style: TextStyle(fontSize: 12)),
+                      ],
+                    )),
+                GestureDetector(
+                  onTap: () {
+                    _playClickAndSpeak("الموقع");
+                    _handleLocationRequest();
+                  },
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        'assets/location.png',
+                        width: 60,
+                        height: 60,
+                      ),
+                      const SizedBox(height: 4),
+                      const Text("الموقع", style: TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () async {
+                    String resultt =
+                        await _batteryService.getBatteryPercentageInArabic();
+                    _playClickAndSpeak(resultt);
+                  },
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        'assets/charge.png',
+                        width: 60,
+                        height: 60,
+                      ),
+                      const SizedBox(height: 4),
+                      const Text("البطارية", style: TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            color: const Color.fromARGB(255, 165, 205, 238),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                GestureDetector(
+                  onTap: () => {
+                    _playClickAndSpeak("المعرض"),
+                    _handleImagePicking(
+                      ImageSource.gallery,
+                      'ماذا يوجد في الصورة ؟',
+                    ),
+                  },
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        'assets/picture.png',
+                        width: 60,
+                        height: 60,
+                      ),
+                      const SizedBox(height: 5),
+                      const Text("المعرض", style: TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => {
+                    _playClickAndSpeak("الكاميرا"),
+                    _handleImagePicking(
+                      ImageSource.camera,
+                      'ماذا يوجد في الصورة ؟',
+                    ),
+                  },
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        'assets/scanner.png',
+                        width: 60, // حجم الأيقونة
+                        height: 60,
+                      ),
+                      const SizedBox(height: 5),
+                      const Text("الكاميرا", style: TextStyle(fontSize: 12)),
                     ],
                   ),
                 ),

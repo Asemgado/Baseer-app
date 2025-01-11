@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:baseer/screens/login.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -23,37 +25,56 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _fetchUserData() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final userId = await prefs.getString('user_id');
-    // int id = int.parse(userId!);
     try {
+      setState(() => _isLoading = true);
+
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('user_id');
+      log('User hhhhhhhID: $userId');
+      if (userId == null) throw Exception('لم يتم العثور على معرف المستخدم');
+
+      final url = Uri.parse('https://basser-api.vercel.app/profile/$userId');
       final response = await http.get(
-        Uri.parse(
-            "https://basser-api.vercel.app/profile/$userId"), // Update with your profile endpoint
+        url,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json; charset=UTF-8',
+          // 'Authorization': 'Bearer $userId',
+        },
       );
 
       if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+
+        final List<dynamic> data = responseData['data'];
+
+        // Create a map from the array data
+        final Map<String, dynamic> userData = {
+          'id': data[0],
+          'username': data[1],
+          'password': data[2],
+          'phone': data[3],
+          'address': data[4],
+          'illness': data[5],
+          'gender': data[6],
+          'age': data[7],
+          'imergency_contact': data[8],
+        };
+        log(userData.toString());
         setState(() {
-          _userData = json.decode(response.body);
+          _userData = userData;
           _isLoading = false;
         });
       } else {
-        print(response.body);
-        throw Exception('فشل في تحميل البيانات');
+        throw Exception(
+            'فشل في تحميل البيانات (${response.statusCode}): ${response.body}');
       }
     } catch (e) {
       if (mounted) {
-        //print(response.body=);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('خطأ: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('خطأ: ${e.toString()}')),
         );
       }
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 
@@ -132,7 +153,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     children: [
                       const SizedBox(height: 20),
                       Text(
-                        _userData['data'][1] ?? 'المستخدم',
+                        _userData['username'] ?? 'المستخدم',
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -140,17 +161,17 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       const SizedBox(height: 20),
                       _buildInfoCard(
-                          'الهاتف', _userData['data'][3] ?? 'غير متوفر'),
+                          'الهاتف', _userData['phone'] ?? 'غير متوفر'),
                       _buildInfoCard(
-                          'العنوان', _userData['data'][4] ?? 'غير متوفر'),
+                          'العنوان', _userData['address'] ?? 'غير متوفر'),
                       _buildInfoCard(
-                          'الأمراض', _userData['data'][5] ?? 'غير متوفر'),
+                          'الأمراض', _userData['illness'] ?? 'غير متوفر'),
                       _buildInfoCard(
-                          'الجنس', _userData['data'][6] ?? 'غير متوفر'),
-                      _buildInfoCard('العمر',
-                          _userData['data'][7]?.toString() ?? 'غير متوفر'),
+                          'الجنس', _userData['gender'] ?? 'غير متوفر'),
                       _buildInfoCard(
-                          'رقم الطوارئ', _userData['data'][8] ?? 'غير متوفر'),
+                          'العمر', _userData['age']?.toString() ?? 'غير متوفر'),
+                      _buildInfoCard('رقم الطوارئ',
+                          _userData['imergency_contact'] ?? 'غير متوفر'),
                       const SizedBox(height: 20),
                     ],
                   ),
