@@ -38,6 +38,8 @@ dependencies:
   url_launcher: ^6.3.1
   just_audio: ^0.9.42
   shared_preferences: ^2.3.4
+  battery_plus: ^6.2.1
+  mobile_scanner: ^6.0.2
 
 dev_dependencies:
   flutter_test:
@@ -68,6 +70,8 @@ flutter:
     - assets/picture.png
     - assets/profile.png
     - assets/click.mp3
+    - assets/charge.png
+    - assets/qrcode.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
