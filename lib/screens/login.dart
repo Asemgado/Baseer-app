@@ -21,7 +21,6 @@ class _LoginState extends State<Login> {
   Future<void> _cacheUserData(Map<String, dynamic> userData) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_id', userData['id'].toString());
-    // await prefs.setString('username', userData['username'] ?? '');
     // You can cache more user data as needed
   }
 
@@ -83,7 +82,7 @@ class _LoginState extends State<Login> {
         }
       } catch (e) {
         if (mounted) {
-          print(e.toString());
+          // print(e.toString());
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('خطأ: ${e.toString()}'),
@@ -123,16 +122,7 @@ class _LoginState extends State<Login> {
   @override
   void initState() {
     super.initState();
-    // Check if user is already logged in
-    isLoggedIn().then((loggedIn) {
-      if (loggedIn) {
-        // Navigate to home page if already logged in
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => HomePage()),
-        // );
-      }
-    });
+  
   }
 
   @override
@@ -150,29 +140,20 @@ class _LoginState extends State<Login> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: 40),
-
                     // Logo or App Title could go here
-                    const Icon(
-                      Icons.lock_outlined,
-                      size: 64,
-                      color: Colors.green,
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Welcome Text
-                    const Text(
-                      'بصير',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                    Center(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        // To center the image horizontally
+                        child: Image.asset(
+                          'assets/lastlogoo.png',
+                          width: 350,
+                          height: 350,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
-
-                    const SizedBox(height: 32),
-
+                    const SizedBox(height: 34),
                     // Username Field
                     TextFormField(
                       controller: _usernameController,
@@ -222,7 +203,7 @@ class _LoginState extends State<Login> {
                     ElevatedButton(
                       onPressed: _isLoading ? null : _submitForm,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
+                        backgroundColor: const Color.fromARGB(255, 18, 65, 104),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -241,9 +222,9 @@ class _LoginState extends State<Login> {
                           : const Text(
                               'دخول',
                               style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
                             ),
                     ),
 
@@ -264,7 +245,7 @@ class _LoginState extends State<Login> {
                           child: const Text(
                             'ليس لدي حساب',
                             style: TextStyle(
-                              color: Colors.green,
+                              color: Color.fromARGB(255, 4, 36, 62),
                               fontWeight: FontWeight.w500,
                             ),
                           ),

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:baseer/screens/chat_screen.dart';
 import 'package:baseer/screens/login.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +18,7 @@ class Register extends StatefulWidget {
 class _RegisterState extends State<Register> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _fullnameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
@@ -42,6 +45,7 @@ class _RegisterState extends State<Register> {
       try {
         Map<String, String> requestBody = {
           'username': _usernameController.text.trim(),
+          'fullname': _fullnameController.text.trim(),
           'password': _passwordController.text.trim(),
           'phone': _phoneController.text.trim(),
           'address': _addressController.text.trim(),
@@ -60,6 +64,7 @@ class _RegisterState extends State<Register> {
         );
 
         if (response.statusCode == 200 || response.statusCode == 201) {
+          log(response.body);
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -114,7 +119,7 @@ class _RegisterState extends State<Register> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: Scaffold(
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -123,14 +128,16 @@ class _RegisterState extends State<Register> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  height: 50,
-                ),
+                SizedBox(height: 60),
+                // Username Field
                 TextFormField(
                   controller: _usernameController,
                   decoration: const InputDecoration(
                     labelText: 'اسم المستخدم',
+                    prefixIcon: Icon(Icons.person),
                     border: OutlineInputBorder(),
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -141,10 +148,31 @@ class _RegisterState extends State<Register> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
+                  controller: _fullnameController,
+                  decoration: const InputDecoration(
+                    labelText: 'اسم المستخدم كامل',
+                    prefixIcon: Icon(Icons.person),
+                    border: OutlineInputBorder(),
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return ' الرجاء إدخال اسم المستخدم كامل';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                // Password Field
+                TextFormField(
                   controller: _passwordController,
                   decoration: const InputDecoration(
                     labelText: 'كلمة المرور',
+                    prefixIcon: Icon(Icons.lock),
                     border: OutlineInputBorder(),
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   ),
                   obscureText: true,
                   validator: (value) {
@@ -155,11 +183,15 @@ class _RegisterState extends State<Register> {
                   },
                 ),
                 const SizedBox(height: 16),
+                // Phone Field
                 TextFormField(
                   controller: _phoneController,
                   decoration: const InputDecoration(
                     labelText: 'الهاتف',
+                    prefixIcon: Icon(Icons.phone),
                     border: OutlineInputBorder(),
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   ),
                   keyboardType: TextInputType.phone,
                   validator: (value) {
@@ -170,11 +202,15 @@ class _RegisterState extends State<Register> {
                   },
                 ),
                 const SizedBox(height: 16),
+                // Address Field
                 TextFormField(
                   controller: _addressController,
                   decoration: const InputDecoration(
                     labelText: 'العنوان',
+                    prefixIcon: Icon(Icons.location_on),
                     border: OutlineInputBorder(),
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   ),
                   maxLines: 2,
                   validator: (value) {
@@ -185,20 +221,28 @@ class _RegisterState extends State<Register> {
                   },
                 ),
                 const SizedBox(height: 16),
+                // Illness Field
                 TextFormField(
                   controller: _illnessController,
                   decoration: const InputDecoration(
                     labelText: 'الأمراض',
+                    prefixIcon: Icon(Icons.medical_services),
                     border: OutlineInputBorder(),
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   ),
                   maxLines: 2,
                 ),
                 const SizedBox(height: 16),
+                // Gender Field
                 TextFormField(
                   controller: _genderController,
                   decoration: const InputDecoration(
                     labelText: 'الجنس',
+                    prefixIcon: Icon(Icons.transgender),
                     border: OutlineInputBorder(),
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -208,11 +252,15 @@ class _RegisterState extends State<Register> {
                   },
                 ),
                 const SizedBox(height: 16),
+                // Age Field
                 TextFormField(
                   controller: _ageController,
                   decoration: const InputDecoration(
                     labelText: 'العمر',
+                    prefixIcon: Icon(Icons.calendar_today),
                     border: OutlineInputBorder(),
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   ),
                   keyboardType: TextInputType.number,
                   validator: (value) {
@@ -223,11 +271,15 @@ class _RegisterState extends State<Register> {
                   },
                 ),
                 const SizedBox(height: 16),
+                // Emergency Contact Field
                 TextFormField(
                   controller: _emergencyContactController,
                   decoration: const InputDecoration(
                     labelText: 'رقم الطوارئ',
+                    prefixIcon: Icon(Icons.phone_in_talk),
                     border: OutlineInputBorder(),
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   ),
                   keyboardType: TextInputType.phone,
                   validator: (value) {
@@ -238,33 +290,40 @@ class _RegisterState extends State<Register> {
                   },
                 ),
                 const SizedBox(height: 24),
+                // Submit Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _submitForm,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: const Color.fromARGB(255, 58, 101, 153),
                       padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : const Text(
                             'تسجيل دخول',
-                            style: TextStyle(fontSize: 16),
+                            style: TextStyle(fontSize: 16, color: Colors.white),
                           ),
                   ),
                 ),
+                const SizedBox(height: 16),
+                // Already have an account link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     TextButton(
-                        onPressed: () {
-                          Navigator.push(context,
-                              MaterialPageRoute(builder: (context) => Login()));
-                        },
-                        child: Text('لدي حساب')),
+                      onPressed: () {
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (context) => Login()));
+                      },
+                      child: const Text('لدي حساب'),
+                    ),
                   ],
-                )
+                ),
               ],
             ),
           ),

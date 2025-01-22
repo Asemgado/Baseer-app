@@ -44,7 +44,8 @@ class _ProfilePageState extends State<ProfilePage> {
       );
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
+        final responseBody = utf8.decode(response.bodyBytes);
+        final Map<String, dynamic> responseData = json.decode(responseBody);
 
         final List<dynamic> data = responseData['data'];
 
@@ -52,13 +53,14 @@ class _ProfilePageState extends State<ProfilePage> {
         final Map<String, dynamic> userData = {
           'id': data[0],
           'username': data[1],
-          'password': data[2],
-          'phone': data[3],
-          'address': data[4],
-          'illness': data[5],
-          'gender': data[6],
-          'age': data[7],
-          'imergency_contact': data[8],
+          'fullname': data[2],
+          'password': data[3],
+          'phone': data[4],
+          'address': data[5],
+          'illness': data[6],
+          'gender': data[7],
+          'age': data[8],
+          'imergency_contact': data[9],
         };
         log(userData.toString());
         setState(() {
@@ -155,7 +157,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           children: [
                             const SizedBox(height: 20),
                             Text(
-                              _userData['username'] ?? 'المستخدم',
+                              _userData['fullname'] ?? 'المستخدم ',
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,

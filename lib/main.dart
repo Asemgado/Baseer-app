@@ -32,7 +32,6 @@ class _ChatAppState extends State<ChatApp> {
         });
       }
     } catch (e) {
-      print('Error checking login status: $e');
       if (mounted) {
         setState(() {
           isLogin = false;
@@ -54,11 +53,6 @@ class _ChatAppState extends State<ChatApp> {
       theme: ThemeData(
         primarySwatch: Colors.blue,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
-        ),
       ),
       home: isLogin == null
           ? const Center(child: CircularProgressIndicator())

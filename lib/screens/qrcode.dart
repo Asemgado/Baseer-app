@@ -2,22 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-// class MyApp extends StatelessWidget {
-//   const MyApp({Key? key}) : super(key: key);
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       title: 'QR Scanner',
-//       theme: ThemeData(
-//         primarySwatch: Colors.blue,
-//       ),
-//       home: const QRScannerScreen(),
-//       debugShowCheckedModeBanner: false,
-//     );
-//   }
-// }
-
 class QRScannerScreen extends StatefulWidget {
   const QRScannerScreen({Key? key}) : super(key: key);
 
@@ -74,11 +58,8 @@ class ResultScreen extends StatelessWidget {
       final Uri url = Uri.parse(scannedCode);
       if (await canLaunchUrl(url)) {
         await launchUrl(url, mode: LaunchMode.externalApplication);
-      } else {
-        debugPrint('لا يمكن فتح الرابط $scannedCode');
       }
     } catch (e) {
-      debugPrint('خطأ في فتح الرابط: $e');
     }
   }
 

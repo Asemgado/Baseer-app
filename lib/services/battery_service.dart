@@ -33,11 +33,11 @@ class BatteryService {
   }
 
   /// قراءة نسبة البطارية كرقم
-  Future<int> getBatteryPercentage() async {
-    try {
-      return await _battery.batteryLevel;
-    } catch (e) {
-      return -1; // رمز للخطأ
-    }
-  }
+  // Future<int> getBatteryPercentage() async {
+  //   try {
+  //     return await _battery.batteryLevel;
+  //   } catch (e) {
+  //     return -1; // رمز للخطأ
+  //   }
+  // }
 }

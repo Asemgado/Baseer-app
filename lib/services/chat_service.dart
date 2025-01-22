@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatService {
   static const String _baseUrl = "https://basser-api.vercel.app";
-
+  //why map
   static Future<Map<String, dynamic>> sendMessage(String message) async {
     final response = await http.post(
       Uri.parse("$_baseUrl/chat"),

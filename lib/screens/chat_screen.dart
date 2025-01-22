@@ -29,23 +29,23 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final List<ChatMessage> _messages = [];
   final BatteryService _batteryService = BatteryService();
-  late AudioPlayer _audioPlayer;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   bool _isLoading = false;
   bool _isListening = false;
-  File? _imageFile;
-  String? _base64Image;
+  File? _imageFile; //بخزن فيه مكان الصورة اللي هتتحمل
+  String? _base64Image; //بخزن فيه الصورة
 
   @override
   void initState() {
     super.initState();
-    _audioPlayer = AudioPlayer();
     _initializeServices();
   }
 
   Future<void> _initializeServices() async {
     await LocationService.checkLocationPermission(context);
     await _flutterTts.setLanguage("ar");
+    await _flutterTts.speak("مرحبًا بك في بصير");
   }
 
   @override
@@ -69,11 +69,10 @@ class _ChatScreenState extends State<ChatScreen> {
           _imageFile = File(pickedFile.path);
           _base64Image = base64Encode(imageBytes).toString();
         });
-        await _processAndSendImage(message);
+        await _processAndSendImage(message); //message is ماذا يوجد في الصورة ؟
       }
     } catch (e) {
       _showErrorSnackBar('Error picking image: $e');
-      [];
     }
   }
 
@@ -83,7 +82,6 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() {
       _isLoading = true;
       _addMessage(ChatMessage(type: 'user', image: _imageFile));
-      _addMessage(ChatMessage(type: 'user', text: message));
     });
 
     try {
@@ -127,6 +125,7 @@ class _ChatScreenState extends State<ChatScreen> {
         type: 'ai',
         text: response["message"],
         order: response["order"],
+        phone: response["phone"],
       );
 
       _addMessage(aiMessage);
@@ -137,14 +136,12 @@ class _ChatScreenState extends State<ChatScreen> {
       } else if (aiMessage.order == 'LOCATION') {
         await _handleLocationRequest();
       } else if (aiMessage.order == 'PHONE') {
-        await _launchPhone(aiMessage.text!);
+        await _launchPhone(aiMessage.phone!);
       } else if (aiMessage.order == 'EMERGENCY') {
         await _sendEmergencyMessage();
+      } else if (aiMessage.order == 'TIME') {
+        await _speakTime();
       }
-      // else if (aiMessage.order == 'WHATSAPP') {
-      //
-      //   await launchWhatsApp(aiMessage.text!, message:'برجاء الاتصال بي');
-      // }
     } catch (e) {
       _showErrorSnackBar('Error sending message: $e');
     } finally {
@@ -157,38 +154,24 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _launchPhone(String phoneNumber) async {
     try {
-      // Validate phone number format
-
       final url = 'tel:+2$phoneNumber';
-
-      // Check if can launch before attempting
       if (await canLaunchUrlString(url)) {
-        final bool launched = await launchUrlString(
-          url,
-          mode: LaunchMode.externalApplication,
-        );
-
-        if (!launched) {
-          _showErrorSnackBar('لا يمكن الاتصال بالرقم: $phoneNumber');
-        }
+        await launchUrlString(url);
       } else {
-        print("$phoneNumber");
-        _showErrorSnackBar('لا يمكن إجراء المكالمة');
+        throw 'Could not launch $url';
       }
     } catch (e) {
-      _showErrorSnackBar('خطأ في الاتصال: $e');
+      _showErrorSnackBar('Error launching phone: $e');
     }
   }
 
   Future<void> _sendEmergencyMessage() async {
     try {
-      // Validate phone number format
-
       final location = await LocationService.getCurrentLocation();
 
       if (location != null) {
         final locationMessage =
-            'موقعي الحالي: خط العرض: ${location.latitude} خط الطول: ${location.longitude}';
+            ' ${location.latitude} ${location.longitude} انا في خطر الحقني';
         await ChatService.sendEmergency(locationMessage);
       } else {
         throw Exception('لا يمكن الحصول على الموقع');
@@ -197,47 +180,6 @@ class _ChatScreenState extends State<ChatScreen> {
       _showErrorSnackBar(e.toString());
     }
   }
-
-  // Future<void> launchWhatsApp(String phoneNumber, {String message = ''}) async {
-  //   try {
-  //     // Remove any non-numeric characters from phone number
-  //     //final cleanNumber = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
-
-  //     // URL encode the message
-  //     final encodedMessage = Uri.encodeComponent(message);
-
-  //     // WhatsApp URL scheme with country code (Egypt +20) and message
-  //     final url = 'whatsapp://send?phone=20$phoneNumber&text=$encodedMessage';
-
-  //     // Alternative URL for web WhatsApp
-  //     final webUrl = 'https://wa.me/20$phoneNumber?text=$encodedMessage';
-
-  //     if (await canLaunchUrlString(url)) {
-  //       final bool launched = await launchUrlString(
-  //         url,
-  //         mode: LaunchMode.externalApplication,
-  //       );
-
-  //       if (!launched) {
-  //         // Try web URL as fallback
-  //         if (await canLaunchUrlString(webUrl)) {
-  //           await launchUrlString(webUrl);
-  //         } else {
-  //           _showErrorSnackBar('لا يمكن فتح واتساب');
-  //         }
-  //       }
-  //     } else {
-  //       // Try web URL if app URL fails
-  //       if (await canLaunchUrlString(webUrl)) {
-  //         await launchUrlString(webUrl);
-  //       } else {
-  //         _showErrorSnackBar('الرجاء التأكد من تثبيت واتساب');
-  //       }
-  //     }
-  //   } catch (e) {
-  //     _showErrorSnackBar('خطأ في فتح واتساب: $e');
-  //   }
-  // }
 
   Future<void> _handleLocationRequest() async {
     try {
@@ -297,7 +239,15 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Future<void> _speakTime() async {
+    final DateTime now = DateTime.now();
+    final String currentTime =
+        "الوقت الحالي ${now.hour}:${now.minute.toString().padLeft(2, '0')}"; // النص الذي سيُقرأ
+    await _flutterTts.speak(currentTime);
+  }
+
   void _addMessage(ChatMessage message) {
+    //ماذا يوجد في الصورة ؟
     setState(() => _messages.add(message));
   }
 
@@ -312,11 +262,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _playClickAndSpeak(String text) async {
-    // تشغيل صوت النقر
+   
     await _audioPlayer.setAsset('assets/click.mp3');
     await _audioPlayer.play();
-
-    // قراءة النص
     await _flutterTts.speak(text);
   }
 
@@ -343,16 +291,9 @@ class _ChatScreenState extends State<ChatScreen> {
         title: const Text(
           "بصير",
           style: TextStyle(
-            color: Colors.white, // لون النص
-            fontSize: 28, // حجم الخط
-            fontWeight: FontWeight.bold, // وزن الخط
-            shadows: [
-              Shadow(
-                offset: Offset(2, 2), // اتجاه الظل
-                color: Colors.black26, // لون الظل
-                blurRadius: 4, // شدة التمويه للظل
-              ),
-            ],
+            color: Colors.white,
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
           ),
         ),
         backgroundColor: const Color.fromARGB(255, 22, 74, 117),
@@ -361,10 +302,8 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Column(
         children: [
-          // الشريط المخصص للأيقونات
           Container(
-            color:
-                const Color.fromARGB(255, 165, 205, 238), // لون الخلفية للشريط
+            color: const Color.fromARGB(255, 165, 205, 238),
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -386,7 +325,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         width: 60,
                         height: 60,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 4), // المسافة بين الصورة والنص
                       const Text("الملف الشخصي",
                           style: TextStyle(fontSize: 12)),
                     ],
