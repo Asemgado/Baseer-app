@@ -5,7 +5,7 @@ from PIL import Image
 
 conn_str = "data_base_connection_string"
 genai.configure(api_key="api_key")
-model = genai.GenerativeModel(model_name='models/gemini-2.0-flash-exp')
+model = genai.GenerativeModel(model_name='models/Baseer')
 
 
 pre_data = []
