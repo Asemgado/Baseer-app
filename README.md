@@ -19,6 +19,8 @@ Baseer is an innovative Flutter-based voice assistant application designed speci
 - ⏰ **Time Management**: Voice time queries and updates
 - 🔍 **QR Code Scanner**: Hands-free QR code scanning
 - 🆘 **Emergency Assistance**: Quick contact with designated aids
+- 📚 **Book Reading**: Voice-activated book reading
+- and more...
 
 ## Technical Stack
 
