@@ -1,0 +1,7 @@
+google-generativeai
+pydantic
+fastapi
+uvicorn
+psycopg2-binary
+pillow
+httpx
