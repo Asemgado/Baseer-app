@@ -273,7 +273,7 @@ class _ChatScreenState extends State<ChatScreen> {
       child: SizedBox(
         width: double.infinity,
         child: ColoredBox(
-            color: const Color.fromARGB(255, 22, 74, 117),
+            color: const Color.fromARGB(255, 34, 54, 65),
             child: Icon(
               _isListening ? Icons.stop : Icons.mic,
               color: _isListening ? Colors.red : Colors.white,
@@ -286,6 +286,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xff0a171e),
       appBar: AppBar(
         title: const Text(
           "بصير",
@@ -295,14 +296,14 @@ class _ChatScreenState extends State<ChatScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: const Color.fromARGB(255, 22, 74, 117),
+        backgroundColor: const Color(0xff0a171e),
         shadowColor: Colors.transparent,
         centerTitle: true,
       ),
       body: Column(
         children: [
           Container(
-            color: const Color.fromARGB(255, 165, 205, 238),
+            color: const Color(0xff0a171e),
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -389,7 +390,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           Container(
-            color: const Color.fromARGB(255, 165, 205, 238),
+            color: const Color(0xff0a171e),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
