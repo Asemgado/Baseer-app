@@ -262,7 +262,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _playClickAndSpeak(String text) async {
-   
     await _audioPlayer.setAsset('assets/click.mp3');
     await _audioPlayer.play();
     await _flutterTts.speak(text);
