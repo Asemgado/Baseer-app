@@ -1,7 +1,7 @@
 # Baseer - Arabic Voice Assistant for Visually Impaired
 
 <p align="center">
-  <img src="assets/baseer_logo.png" width="200" alt="Baseer Logo">
+  <img src="assets/lastone.png" width="200" alt="Baseer Logo">
 </p>
 
 ## Overview
