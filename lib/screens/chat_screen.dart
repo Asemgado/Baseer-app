@@ -243,6 +243,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final DateTime now = DateTime.now();
     final String currentTime =
         "الوقت الحالي ${now.hour}:${now.minute.toString().padLeft(2, '0')}"; // النص الذي سيُقرأ
+    _messages.add(ChatMessage(type: 'ai', text: currentTime));
     await _flutterTts.speak(currentTime);
   }
 
